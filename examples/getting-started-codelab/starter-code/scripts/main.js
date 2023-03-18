@@ -6,13 +6,33 @@
  (function() {
 
   let currentButton;
+  
+  function loadWorkspace(button) {
+    const workspace = Blockly.common.getMainWorkspace();
+    if (button.blocklySave) {
+      Blockly.serialization.workspaces.load(button.blocklySave, workspace);
+    } else {
+      workspace.clear();
+    }
+  }
 
   function handlePlay(event) {
     // Add code for playing sound.
+    loadWorkspace(event.target);
+
+    let code = Blockly.JavaScript.workspaceToCode(Blockly.common.getMainWorkspace());
+    code += 'MusicMaker.play();';
+
+    try {
+      eval(code);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   function save(button) {
     // Add code for saving the behavior of a button.
+    button.blocklySave = Blockly.serialization.workspaces.save(Blockly.common.getMainWorkspace());
   }
 
   function handleSave() {
@@ -39,6 +59,7 @@
   function enableBlocklyMode(e) {
     document.body.setAttribute('mode', 'blockly');
     currentButton = e.target;
+    loadWorkspace(currentButton);
   }
 
   document.querySelector('#edit').addEventListener('click', enableEditMode);
@@ -46,5 +67,34 @@
   document.querySelector('#save').addEventListener('click', handleSave);
 
   enableMakerMode();
+
+  const toolbox = {
+    'kind': 'flyoutToolbox',
+    'contents': [
+      {
+        'kind': 'block',
+        'type': 'controls_repeat_ext',
+        'inputs': {
+          'TIMES': {
+            'shadow': {
+              'type': 'math_number',
+              'fields': {
+                'NUM': 5
+              }
+            }
+          }
+        }
+      },
+      {
+        'kind': 'block',
+        'type': 'play_sound'
+      }
+    ]
+  }
+
+  Blockly.inject('blocklyDiv', {
+    toolbox: toolbox,
+    scrollbars: false
+  });
 
 })();
